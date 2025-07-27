@@ -469,6 +469,13 @@ If you use Omics Oracle in your research, please cite:
 
 ---
 
+## API Usage & Rate Limiting
+This project implements responsible API usage:
+- ⏱️ **Rate limiting**: Respects API limits (PubMed: 10/s, ChEMBL: 2/s, PDB: 5/s)
+- 💾 **Caching**: 6-hour cache to minimize redundant API calls
+- 🔄 **Retry logic**: Exponential backoff for failed requests
+- ⏰ **Timeouts**: 30-second timeout protection
+---
 **Built for the drug discovery community**
 
 *Advancing precision medicine through intelligent target discovery*
