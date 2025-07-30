@@ -28,6 +28,9 @@ cache/
 *.json
 *.csv
 *.xlsx
+
+# Allow benchmark results
+!results/*.json
 *.pdf
 *.png
 
