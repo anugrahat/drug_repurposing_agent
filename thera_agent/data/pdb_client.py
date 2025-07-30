@@ -69,7 +69,7 @@ class PDBClient:
             return quality_structures
             
         except Exception as e:
-            print(f"PDB search error: {e}")
+            logger.warning(f"PDB search failed for {gene_symbol}: {e}")
             # Try fallback search
             return await self._fallback_text_search(gene_symbol, limit)
     

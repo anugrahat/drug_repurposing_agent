@@ -1,476 +1,190 @@
-# Omics-Oracle — a Retrieval-Augmented GenAI agent that instantly surfaces druggable targets by mining PubMed, ChEMBL, and PDB in one shot.
+# 🎯 Drug Repurposing Agent
 
-**AI-powered drug discovery platform** that integrates multiple biological databases with Large Language Model intelligence for natural language therapeutic target analysis.
+**AI-Powered Pharmaceutical Intelligence for Precision Drug Repurposing**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![OpenAI GPT-4](https://img.shields.io/badge/AI-GPT--4-green.svg)](https://openai.com/)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-brightgreen.svg)
-![Status](https://img.shields.io/badge/status-production--ready-green.svg)
+## 🚀 Overview
+
+The Drug Repurposing Agent is a sophisticated pharmaceutical intelligence system that discovers drug repurposing opportunities by analyzing clinical trial failures and predicting alternative therapeutic applications. It combines LLM-driven insights with precision biomedical data integration to identify commercially viable repurposing candidates.
 
 ## ✨ Key Features
 
-- 🤖 **LLM-Powered Intelligence**: Natural language query understanding with GPT-4
-- 🎯 **Disease-to-Target Mapping**: Automatic discovery from disease names ("diabetes" → PPARG, DPP4, GLP1R)
-- 📊 **Multi-Database Integration**: PubMed literature + ChEMBL bioactivity + RCSB PDB structures
-- ⚡ **Async Performance**: Concurrent API calls with intelligent SQLite caching
-- 🏆 **Comprehensive Scoring**: Literature evidence + inhibitor potency + structural data (0-10 scale)
-- 🛡️ **Production Ready**: Rate limiting, fallback mechanisms, graceful error handling
-- 📋 **Intelligent Summaries**: LLM-generated analysis with clinical insights
-
-## 🚀 Quick Start
-
-### 💻 CLI Version (Core Tool)
-```bash
-# Clone and setup
-git clone https://github.com/anugrahat/omics-oracle-.git
-cd omics-oracle-
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Run immediately (no API keys required!)
-python cli.py "type 2 diabetes therapeutic targets"
-```
-
-### 🌐 Web Interface (For Recruiters/Demos)
-```bash
-# Additional setup for beautiful web interface
-pip install -r website/requirements.txt
-
-# Launch Streamlit demo
-cd website && streamlit run app.py
-# Opens at http://localhost:8501
-```
-
-**🎯 For Hiring Managers:** See `website/README.md` for deployment guide
-
-## 🔧 Configuration (Optional but Recommended)
-
-### Step 1: Set up Environment File
-```bash
-# Copy the template
-cp .env.example .env
-```
-
-### Step 2: Add OpenAI API Key (Recommended)
-```bash
-# Edit .env file
-nano .env  # or your preferred editor
-
-# Add your OpenAI API key:
-OPENAI_API_KEY=sk-proj-your-actual-key-here
-NCBI_API_KEY=your_ncbi_key_here  # Optional for higher PubMed rate limits
-```
-
-### Step 3: Get OpenAI API Key
-1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Sign up/login to your account
-3. Click "Create new secret key"
-4. Copy the key (starts with `sk-proj-`)
-5. Paste it in your `.env` file
-
-**💡 Why Add OpenAI Key?**
-- 🧠 **Intelligent Query Parsing**: "Find EGFR inhibitors under 50 nM" → Automatic IC50 filtering
-- 🎯 **Disease Discovery**: "diabetes" → Automatically finds PPARG, DPP4, GLP1R targets  
-- 📋 **Beautiful Summaries**: Clinical insights, target recommendations, publication-ready output
-- 🔬 **Advanced Analysis**: Confidence scoring, query type detection
-
-**✅ No API Keys? Still Works!** Limited
-- Without OpenAI: Falls back to regex parsing + curated disease mappings
-- Without NCBI: Uses Europe PMC for literature search
-- Full functionality maintained with graceful degradation!
-
-## 💡 Usage Examples
-
-### 🧠 Disease-Based Discovery (Recommended)
-
-**Input:**
-```bash
-python cli.py "type 2 diabetes therapeutic targets"
-```
-
-**Output:**
-```
-🚀 Therapeutic Target Agent v2.0
-Query: type 2 diabetes therapeutic targets
-============================================================
-🤖 Parsing query with LLM...
-🧠 Detected disease query, switching to disease mode...
-🎯 Multi-target analysis: PPARG, SLC2A4, ABCC8, DPP4, GLP1R
-
-🎯 TOP TARGETS:
-1. PPARG (Score: 8.4) - 50 inhibitors, 20 structures
-2. DPP4 (Score: 7.9) - 50 inhibitors, 20 structures
-3. ABCC8 (Score: 6.7) - 50 inhibitors, 0 structures
-4. GLP1R (Score: 6.7) - 50 inhibitors, 0 structures
-5. SLC2A4 (Score: 5.6) - 50 inhibitors, 0 structures
-
-💊 TOP INHIBITORS:
-1. CHEMBL107367 (PPARG): 0.35 nM - Sub-nanomolar potency!
-2. CHEMBL1627326 (DPP4): 2.0 nM - Ultra-potent!
-3. CHEMBL3330880 (ABCC8): 0.38 nM - Extraordinary potency!
-```
-
-**More Disease Examples:**
-```bash
-python cli.py "ovarian cancer drug targets"  
-# → Finds: BRCA1, BRCA2, PARP1, PIK3CA, PTEN
-
-python cli.py "Alzheimer's disease targets"
-# → Finds: APP, MAPT, APOE, BACE1, PSEN1
-
-python cli.py "Parkinson's disease therapeutic targets"
-# → Finds: LRRK2, SNCA, PINK1, PARK2, DJ1
-```
-
-### 🎯 IC50 Range Filtering
-
-**Input:**
-```bash
-python cli.py "Find potent EGFR inhibitors between 5 and 50 nM"
-```
-
-**Output:**
-```
-🚀 Therapeutic Target Agent v2.0
-Query: Find potent EGFR inhibitors between 5 and 50 nM
-============================================================
-🤖 Parsing query with LLM...
-🎯 Single target detected: EGFR
-🔬 IC50 range: 5 - 50 nM
-🎯 Analyzing target: EGFR
-
-EGFR Target Analysis (Score: 7.9/10.0)
-Assessment: Good drug target
-
-💊 TOP INHIBITORS:
-1. CHEMBL311111 - IC50: 5.0 nM (Quality: 0.70)
-2. CHEMBL310740 - IC50: 6.0 nM (Quality: 0.70)
-3. CHEMBL319065 - IC50: 6.0 nM (Quality: 0.70)
-4. CHEMBL98475 - IC50: 6.0 nM (Quality: 0.70)
-5. CHEMBL80540 - IC50: 7.0 nM (Quality: 0.70)
-
-🧬 STRUCTURES: 20 high-quality structures found
-📚 LITERATURE: 20 relevant research papers
-```
-
-**More IC50 Examples:**
-```bash
-# Ultra-potent inhibitors
-python cli.py "JAK2 inhibitors under 10 nM"
-
-# Broader range
-python cli.py "BRAF targets with inhibitors between 10 and 500 nM"
-
-# Multiple targets with potency
-python cli.py "EGFR, JAK2, BRAF targets with sub-100 nM inhibitors"
-```
-
-### ⚖️ Multi-Target Comparison
-
-**Input:**
-```bash
-python cli.py "EGFR, JAK2, BRAF cancer targets"
-```
-
-**Output:**
-```
-🎯 Target Classification:
-• Excellent targets (2): JAK2, BRAF
-• Good targets (1): EGFR
-• Moderate targets (0): 
-• Challenging targets (0):
-
-🎯 TOP TARGETS:
-1. JAK2 (Score: 8.4) - 33 inhibitors, 20 structures
-2. BRAF (Score: 8.3) - 39 inhibitors, 20 structures
-3. EGFR (Score: 7.9) - 24 inhibitors, 20 structures
-```
-
-### 🧬 Specific Protein Targets
-
-**Input:**
-```bash
-python cli.py "PARP1 therapeutic targets"
-```
-
-**Output:**
-```
-PARP1 Target Analysis (Score: 8.2/10.0)
-Assessment: Excellent drug target
-
-💊 TOP INHIBITORS:
-1. CHEMBL589586 - IC50: 0.38 nM (Olaparib-like)
-2. CHEMBL1173055 - IC50: 0.6 nM (Clinical candidate)
-3. CHEMBL2107856 - IC50: 0.9 nM (Research compound)
-
-🏥 CLINICAL RELEVANCE: FDA-approved PARP inhibitors for BRCA-mutant cancers
-```
-
-### 💾 Save Results
-```bash
-# Custom output file
-python cli.py "diabetes targets" --output my_diabetes_analysis.json
-
-# Disease analysis with structured output
-python cli.py "lung cancer targets" --output lung_cancer_2024.json
-```
-
-## 📋 Complete LLM-Powered Analysis Example
-
-**Input:**
-```bash
-python cli.py "Alzheimer's disease therapeutic targets"
-```
-
-**Complete Output:**
-```
-🚀 Therapeutic Target Agent v2.0
-Query: Alzheimer's disease therapeutic targets
-============================================================
-🤖 Parsing query with LLM...
-🧠 Detected disease query, switching to disease mode...
-🎯 Multi-target analysis: PSEN1, MAPT, BACE1, APP, APOE
-
-🎯 Analyzing target: PSEN1
-📊 Gathering data from PubMed, ChEMBL, and PDB...
-✅ Literature: 20 results
-✅ Inhibitors: 50 results  
-✅ Structures: 2 results
-
-[... analysis continues for all targets ...]
-
-============================================================
-📋 ANALYSIS SUMMARY
-============================================================
-Multi-Target Analysis Summary
-Analyzed 5 targets (Average score: 7.7/10.0)
-
-🎯 Target Classification:
-• Excellent targets (4): PSEN1, MAPT, BACE1, APP
-• Good targets (0): 
-• Moderate targets (1): APOE
-• Challenging targets (0):
-
-🎯 TOP TARGETS:
-1. PSEN1 (Score: 8.4) - 50 inhibitors, 2 structures
-2. MAPT (Score: 8.4) - 50 inhibitors, 1 structures
-3. BACE1 (Score: 8.4) - 50 inhibitors, 20 structures
-4. APP (Score: 8.4) - 50 inhibitors, 20 structures
-5. APOE (Score: 4.7) - 0 inhibitors, 7 structures
-
-🤖 Generating intelligent summary...
-
-================================================================================
-📋 INTELLIGENT ANALYSIS SUMMARY
-================================================================================
-
-EXECUTIVE SUMMARY
------------------
-The analysis of potential therapeutic targets for Alzheimer's disease reveals 
-five key genes: PSEN1, MAPT, BACE1, APP, and APOE. These targets exhibit 
-varying degrees of druggability, with PSEN1, MAPT, BACE1, and APP showing 
-high target scores and significant number of inhibitors.
-
-TARGET RANKING TABLE
---------------------
-Target | Score  | Inhibitors | Structures | Literature
--------|--------|------------|------------|-----------
-PSEN1  | 8.45   | 50         | 2          | 20
-MAPT   | 8.45   | 50         | 1          | 20
-BACE1  | 8.435  | 50         | 20         | 20
-APP    | 8.38   | 50         | 20         | 20
-APOE   | 4.73   | 0          | 7          | 20
-
-KEY INSIGHTS
-------------
-• PSEN1, MAPT, BACE1, and APP show high druggability with numerous inhibitors
-• BACE1 has excellent structural data (20 structures) for drug design
-• APOE presents challenges but remains important for genetic risk
-• No current FDA-approved drugs, but active research pipelines exist
-
-INHIBITOR HIGHLIGHTS
----------------------
-1. CHEMBL392068 (PSEN1): IC50 = 0.114 nM - Sub-nanomolar!
-2. CHEMBL2036430 (MAPT): IC50 = 0.48 nM - Tau aggregation inhibitor
-3. CHEMBL4452566 (BACE1): IC50 = 0.275 nM - β-secretase inhibitor
-
-STRUCTURAL ANALYSIS
--------------------
-• BACE1: Best structure (1.46 Å) - Excellent for drug design
-• APP: High-resolution structures (1.5 Å) available
-• PSEN1: Cryo-EM structures (3.3 Å) - Membrane protein complex
-• APOE: Multiple high-quality structures (1.4 Å)
-
-CLINICAL RECOMMENDATIONS
-------------------------
-PSEN1, MAPT, BACE1, and APP should be prioritized for further investigation 
-due to their high target scores and number of inhibitors. APOE, despite having 
-no inhibitors, should not be overlooked due to its genetic significance.
-
-================================================================================
-
-✅ Analysis complete! Results saved to alzheimers_targets.json
-```
-
-## 🏗️ Architecture
-
-```
-├── cli.py                # 💻 Command-line interface
-├── thera_agent/          # 🧬 Core RAG system
-│   ├── agent.py          # Main orchestrator
-│   ├── query_parser.py   # LLM query understanding
-│   ├── disease_mapper.py # Disease→target mapping
-│   ├── result_summarizer.py # Intelligent summaries
-│   └── data/
-│       ├── cache.py      # SQLite caching
-│       ├── http_client.py # Async HTTP client
-│       ├── pubmed_client.py # Literature search
-│       ├── chembl_client.py # Bioactivity data
-│       └── pdb_client.py # Protein structures
-└── website/              # 🌐 Web demo for recruiters
-    ├── app.py            # Streamlit interface
-    ├── requirements.txt  # Web dependencies
-    └── README.md         # Deployment guide
-```
-
-## 🛡️ Robust Fallback Systems
-
-| Component | Primary | Fallback | Impact |
-|-----------|---------|----------|--------|
-| **Query Parsing** | OpenAI GPT-4 | Regex extraction | Full functionality |
-| **Disease Mapping** | LLM discovery | Curated mappings | Core diseases covered |
-| **Literature** | PubMed API | Europe PMC | 95%+ coverage |
-| **Summaries** | LLM analysis | Structured tables | Professional output |
-| **Data Storage** | SQLite cache | Live API calls | Performance maintained |
-| **Rate Limits** | Backoff/retry | Cached results | Graceful degradation |
-
-## 🎯 Real-World Validation
-
-**Discovers clinically validated targets:**
-- **Type 2 Diabetes**: PPARG (pioglitazone), DPP4 (sitagliptin), GLP1R (semaglutide)
-- **Cancer**: BRCA1/2 (olaparib), PIK3CA (alpelisib), EGFR (erlotinib)
-- **Alzheimer's**: APP, BACE1, PSEN1 (active research targets)
-- **Type 1 Diabetes**: INS, PTPN22, GAD65 (autoimmune targets)
-
-## 📊 Data Sources
-
-- **📚 Literature**: PubMed (35M+ papers) + Europe PMC fallback
-- **💊 Bioactivity**: ChEMBL (2M+ compounds, IC50/Ki values)
-- **🧬 Structures**: RCSB PDB (200K+ protein structures)
-- **🤖 Intelligence**: OpenAI GPT-4 for query understanding & summaries
-
-## 🚀 Production Features
-
-- ✅ **Async/await** architecture for performance
-- ✅ **SQLite caching** with intelligent TTL
-- ✅ **Rate limiting** and exponential backoff
-- ✅ **Comprehensive logging** and error handling
-- ✅ **Works offline** with cached data
-- ✅ **No API keys required** for basic functionality
-- ✅ **LLM-powered summaries** for publication-ready output
-
-## 📋 Requirements
-
+### 🔬 **Precision Target Discovery**
+- **LLM-First Analysis**: GPT-4 powered drug-target mapping with ChEMBL validation
+- **High-Quality Filtering**: `target_type = SINGLE PROTEIN` + `confidence_score ≥ 8`
+- **Cell Line Elimination**: Removes A549, HCT-116, and 50+ screening artifacts
+- **Bioactivity Scoring**: Prioritizes IC50/KI/KD over low-quality assay data
+
+### 📊 **Clinical Intelligence**
+- **Trial Failure Analysis**: Processes 100+ failed trials per disease indication
+- **Safety Profiling**: FDA adverse events, contraindications, drug interactions
+- **Asset Availability**: Pharmaceutical ownership, licensing status, commercial availability
+- **Failure Pattern Recognition**: Categorizes termination reasons (safety, efficacy, business)
+
+### 🤖 **AI-Powered Insights**
+- **Biological Mechanism Analysis**: Why drugs failed and pathway implications
+- **Alternative Target Discovery**: Novel therapeutic approaches based on failure patterns
+- **Commercial Scoring**: Multi-factor ranking by trial volume, phases, safety, and availability
+- **Drug Categorization**: Repurposing (FDA-approved) vs Rescue (failed/experimental)
+
+## 🛠 Installation
+
+### Prerequisites
 - Python 3.8+
-- Dependencies: `pip install -r requirements.txt`
-- Optional: OpenAI API key for enhanced LLM features
-- Optional: NCBI API key for PubMed rate limits
+- OpenAI API key
 
-## 🧪 Real-World Use Cases
-
-### 🔬 Academic Research
+### Setup
 ```bash
-# Rare disease research
-python cli.py "cystic fibrosis therapeutic targets"
-python cli.py "Huntington's disease protein targets"
-
-# Comparative analysis
-python cli.py "CDK4, CDK6, CDK9 kinase inhibitor comparison"
-python cli.py "EGFR, HER2, HER3 receptor family analysis"
-
-# Structural biology
-python cli.py "Find membrane protein targets with crystal structures"
+git clone git@github.com:anugrahat/drug_repurposing_agent.git
+cd drug_repurposing_agent
+pip install -r requirements.txt
 ```
 
-### 🏭 Pharmaceutical Development
+### Environment Configuration
 ```bash
-# Target assessment
-python cli.py "Assess druggability of KRAS G12C mutant"
-python cli.py "Find backup targets for failed Alzheimer's programs"
-
-# Competitive intelligence
-python cli.py "JAK family inhibitors clinical pipeline"
-python cli.py "PD-1, PD-L1, CTLA-4 immunotherapy targets"
-
-# Portfolio planning
-python cli.py "Oncology targets with sub-10 nM inhibitors"
+export OPENAI_API_KEY="your-openai-api-key"
 ```
 
-### 🏥 Clinical Decision Support
+## 🎮 Usage
+
+### Basic Analysis
 ```bash
-# Resistance mechanisms
-python cli.py "EGFR resistance mutation targets"
-python cli.py "Find alternative targets for chemotherapy resistance"
-
-# Combination therapy
-python cli.py "DNA repair pathway targets for PARP combination"
-python cli.py "Immunotherapy combination targets"
-
-# Personalized medicine
-python cli.py "BRCA1/2 deficient cancer targets"
+python repurpose_cli.py "alzheimer's disease" --top 5
 ```
 
-### 💊 Drug Repurposing
+### Advanced Options
 ```bash
-# Find new indications
-python cli.py "Antiviral targets with existing inhibitors"
-python cli.py "Inflammation targets with FDA-approved drugs"
+# Analyze with custom parameters
+python repurpose_cli.py "cancer" --top 10 --max-trials 200
 
-# Cross-disease analysis
-python cli.py "Shared targets between diabetes and Alzheimer's"
+# Focus on specific drug categories
+python repurpose_cli.py "diabetes" --category repurposing
 ```
+
+### Programmatic Usage
+```python
+from thera_agent.repurposing_agent import DrugRepurposingAgent
+
+agent = DrugRepurposingAgent()
+results = await agent.analyze_disease("parkinson's disease")
+
+# Access structured data
+repurposing_candidates = results['drug_repurposing_opportunities']
+alternative_targets = results['alternative_targets']
+safety_profiles = results['candidate_safety_profiles']
+```
+
+## 📈 Output Format
+
+### Drug Repurposing Table
+```
+🔄 DRUG REPURPOSING OPPORTUNITIES
+Drug                      Targets                             Owner                     Trials  Score   Phases          Availability
+Pioglitazone              Peroxisome proliferator-activated  University of Texas       3       90.0    PHASE1,PHASE2   available
+Metformin                 AMPK, ADMET                        Massachusetts General     3       75.0    PHASE1,PHASE4   available
+```
+
+### Alternative Targets
+```
+🎯 ALTERNATIVE THERAPEUTIC TARGETS
+1. HER2 (Confidence: 80.0%)
+   • Inhibitors: 50
+   • Most Potent IC50: 5.0 nM
+   • Clinical Trials: 20 total (8 recruiting)
+   • PDB Structures: 5 available
+```
+
+### Safety Profiles
+```
+🛡️ COMPREHENSIVE SAFETY PROFILES
+1. DRUG_NAME
+   ⚠️ Top Adverse Events:
+   • Neutropenia: 4340 reports (6.8%)
+   • Nausea: 3062 reports (7.68%)
+   🚫 Key Contraindications:
+   • Hypersensitivity reactions
+```
+
+## 🏗 Architecture
+
+### Core Components
+```
+thera_agent/
+├── repurposing_agent.py     # Main orchestrator
+├── data/
+│   ├── chembl_client.py     # ChEMBL API with precision filtering
+│   ├── clinical_trials_client.py  # ClinicalTrials.gov integration
+│   ├── drug_safety_client.py      # FDA safety data
+│   ├── drug_resolver.py           # Drug name normalization
+│   ├── pharma_intelligence_client.py  # Asset ownership
+│   ├── http_client.py             # Rate-limited HTTP client
+│   └── cache.py                   # SQLite caching layer
+└── repurpose_cli.py        # Command-line interface
+```
+
+### Data Sources
+- **ChEMBL**: Bioactivity data, drug targets, mechanisms
+- **ClinicalTrials.gov**: Trial failures, termination reasons
+- **FDA OpenFDA**: Adverse events, drug labels, contraindications
+- **RxNav**: Drug interactions
+- **Commercial APIs**: Asset ownership and availability
+
+## 🔬 Methodology
+
+### Target Discovery Pipeline
+1. **Drug Resolution**: Normalize drug names using LLM + ChEMBL search
+2. **LLM Analysis**: Comprehensive drug analysis (targets, class, mechanism)
+3. **ChEMBL Validation**: High-quality bioactivity filtering
+4. **Target Scoring**: Prioritize by activity type and protein relevance
+5. **Mechanism Fallback**: Use `/mechanism` endpoint for cytotoxic agents
+
+### Repurposing Scoring Formula
+```
+Score = Base_Score + Trial_Volume_Bonus + Phase_Bonus + Completion_Bonus 
+        - Failure_Rate_Penalty + Safety_Modifiers
+```
+
+### Quality Filters
+- **Target Type**: SINGLE PROTEIN only
+- **Confidence Score**: ≥ 8 (ChEMBL)
+- **Cell Line Removal**: 50+ known cell lines filtered
+- **Assay Quality**: IC50/KI/KD prioritized over screening data
+
+## 📊 Validation
+
+The system has been validated on multiple disease areas:
+- **Alzheimer's Disease**: Identified BACE inhibitor failures, suggested metabolic approaches
+- **Acute Myeloid Leukemia**: Found BCL-2, FLT3, IDH1/2 alternatives
+- **Brain Cancer**: Discovered IDH1, PD-L1, EZH2 opportunities
+- **Esophageal Cancer**: Revealed HER2, MET, PARP targets
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 License
+## 📜 License
 
-MIT License - Open source for research and commercial use.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Citation
+## 🙏 Acknowledgments
 
-If you use Omics Oracle in your research, please cite:
+- **ChEMBL**: European Bioinformatics Institute
+- **ClinicalTrials.gov**: U.S. National Library of Medicine
+- **OpenFDA**: U.S. Food and Drug Administration
+- **OpenAI**: GPT-4 API for biological insights
 
-```bibtex
-@software{omics_oracle_2024,
-  title={Omics Oracle: AI-Powered Therapeutic Target Discovery},
-  author={Anugraha T},
-  year={2024},
-  url={https://github.com/anugrahat/omics-oracle-}
-}
-```
+## 📞 Contact
 
----
-
-## 🔑 API Key Benefits Summary
-
-| Feature | Without OpenAI | With OpenAI Key |
-|---------|----------------|------------------|
-| **Query Understanding** | Basic regex | 🧠 Natural language |
-| **Disease Mapping** | 12 curated diseases | 🎯 Any disease |
-| **IC50 Filtering** | Manual parsing | 🔬 Automatic detection |
-| **Results Summary** | Basic tables | 📋 Clinical insights |
-| **Query Types** | Limited | 🚀 Unlimited flexibility |
+- **Repository**: https://github.com/anugrahat/drug_repurposing_agent
+- **Issues**: https://github.com/anugrahat/drug_repurposing_agent/issues
 
 ---
 
-**Built for the drug discovery community**
-
-*Advancing precision medicine through intelligent target discovery*
-
-🌟 **Star this repo if it helps your research!** 🌟
+*Transforming pharmaceutical R&D through AI-powered drug repurposing intelligence.*

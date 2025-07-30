@@ -38,7 +38,7 @@ class RateLimitedClient:
         retry=retry_if_exception_type((httpx.TimeoutException, httpx.ConnectError))
     )
     async def get(self, url: str, params: Optional[Dict] = None, headers: Optional[Dict] = None, 
-                  cache_ttl_hours: int = 24) -> Dict[Any, Any]:
+                  cache_ttl_hours: int = 24, timeout: int = 30) -> Dict[Any, Any]:
         """GET request with caching and rate limiting"""
         
         # Check cache first

@@ -29,6 +29,122 @@ class ChEMBLClient:
             print(f"ChEMBL target search error: {e}")
             return []
     
+    async def get_bioactivities(self, chembl_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """Get high-quality bioactivities for a specific ChEMBL compound with target filtering"""
+        client = await get_http_client()
+        
+        url = f"{self.base_url}/activity.json"
+        params = {
+            "molecule_chembl_id": chembl_id,
+            "format": "json",
+            "limit": limit
+        }
+        
+        try:
+            response = await client.get(url, params=params)
+            activities = response.get("activities", [])
+            
+            # Extract and enrich target information from activities
+            enriched_activities = []
+            target_cache = {}  # Cache target details to avoid redundant API calls
+            
+            for activity in activities:
+                target_chembl_id = activity.get("target_chembl_id")
+                if not target_chembl_id:
+                    continue
+                    
+                # Get target details (with caching)
+                if target_chembl_id not in target_cache:
+                    target_details = await self._get_target_details(target_chembl_id)
+                    target_cache[target_chembl_id] = target_details
+                else:
+                    target_details = target_cache[target_chembl_id]
+                
+                # Apply high-quality target filters
+                if not self._is_high_quality_target(target_details):
+                    continue
+                
+                # Add enriched target information
+                target_info = {
+                    "target_chembl_id": target_chembl_id,
+                    "target_pref_name": activity.get("target_pref_name"),
+                    "target_organism": activity.get("target_organism"),
+                    "target_type": target_details.get("target_type"),
+                    "confidence_score": target_details.get("confidence_score"),
+                    "standard_type": activity.get("standard_type"),
+                    "standard_value": activity.get("standard_value"),
+                    "standard_units": activity.get("standard_units"),
+                    "assay_type": activity.get("assay_type")
+                }
+                enriched_activities.append(target_info)
+            
+            return enriched_activities
+            
+        except Exception as e:
+            print(f"ChEMBL bioactivity search error for {chembl_id}: {e}")
+            return []
+    
+    async def _get_target_details(self, target_chembl_id: str) -> Dict[str, Any]:
+        """Get detailed target information from ChEMBL"""
+        client = await get_http_client()
+        
+        url = f"{self.base_url}/target/{target_chembl_id}.json"
+        
+        try:
+            response = await client.get(url)
+            return response
+        except Exception as e:
+            print(f"ChEMBL target details error for {target_chembl_id}: {e}")
+            return {}
+    
+    def _is_high_quality_target(self, target_details: Dict[str, Any]) -> bool:
+        """Filter for high-quality protein targets based on user specifications"""
+        if not target_details:
+            return False
+        
+        # Filter 1: target_type = SINGLE PROTEIN
+        target_type = target_details.get("target_type")
+        if target_type != "SINGLE PROTEIN":
+            return False
+        
+        # Filter 2: confidence_score >= 8 (if available)
+        confidence_score = target_details.get("confidence_score")
+        if confidence_score is not None and confidence_score < 8:
+            return False
+        
+        return True
+    
+    async def get_drug_mechanisms(self, chembl_id: str) -> List[Dict[str, Any]]:
+        """Get drug mechanisms for compounds without clear protein targets"""
+        client = await get_http_client()
+        
+        url = f"{self.base_url}/mechanism.json"
+        params = {
+            "molecule_chembl_id": chembl_id,
+            "format": "json"
+        }
+        
+        try:
+            response = await client.get(url, params=params)
+            mechanisms = response.get("mechanisms", [])
+            
+            # Return mechanism information
+            mechanism_info = []
+            for mechanism in mechanisms:
+                info = {
+                    "mechanism_of_action": mechanism.get("mechanism_of_action"),
+                    "target_chembl_id": mechanism.get("target_chembl_id"),
+                    "mechanism_comment": mechanism.get("mechanism_comment"),
+                    "action_type": mechanism.get("action_type")
+                }
+                mechanism_info.append(info)
+            
+            return mechanism_info
+            
+        except Exception as e:
+            print(f"ChEMBL mechanism search error for {chembl_id}: {e}")
+            return []
+    
     async def get_activities(self, target_chembl_id: str, 
                            standard_types: List[str] = None,
                            limit: int = 100) -> List[Dict[str, Any]]:
@@ -170,6 +286,8 @@ class ChEMBLClient:
             
             try:
                 response = await client.get(url, params=params)
+                if not response:
+                    continue
                 batch_molecules = response.get("molecules", [])
                 
                 for mol in batch_molecules:
