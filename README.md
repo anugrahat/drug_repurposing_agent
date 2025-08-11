@@ -1,4 +1,4 @@
-# 🎯 Drug Repurposing Agent
+# 🎯 Drug Discovery Asset Agent
 
 **AI-Powered Pharmaceutical Intelligence for Precision Drug Repurposing**
 
